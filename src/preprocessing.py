@@ -1,5 +1,4 @@
 
-import re
 import sys
 import pandas as pd
 import numpy as np
@@ -8,7 +7,7 @@ import matplotlib.pyplot as plt
 
 def deaths_by_country(location_df):
     country_df = location_df[['Country_Region', 'Deaths']].groupby('Country_Region').sum().sort_values('Deaths')
-    country_df = country_df[country_df['Deaths'] > 1000]
+    country_df = country_df[country_df['Deaths'] > 1000]  # Graph gets messy without this restriction
     plt.barh(country_df.index, country_df['Deaths'])
     plt.title("Deaths by Country")
     plt.xlabel("Number of Deaths")
