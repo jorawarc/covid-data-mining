@@ -22,8 +22,7 @@ def save_barh_figure(x, y, title, xlabel, ylabel, img_title):
     plt.savefig(img_title, dpi=500, bbox_inches='tight')
 
 
-def deaths_by_country(location_df):
-    # TODO: confirmed cases, recovery by country
+def visual_by_country(location_df):
     country_df = location_df[['Country_Region', 'Deaths', 'Confirmed', 'Recovered']].groupby('Country_Region').sum()
 
     deaths = country_df[country_df['Deaths'] > 1000].sort_values('Deaths')  # Graph gets messy without this restriction
@@ -68,6 +67,7 @@ def reduce_age_range(x):
         else:
             return float(x)  # ex case: 30
 
+
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
@@ -78,7 +78,7 @@ def main(individual_file, location_file):
 
     print(compute_missing_values(individual_df))
     print(compute_missing_values(location_df))
-    deaths_by_country(location_df)
+    visual_by_country(location_df)
 
 
 if __name__ == '__main__':
