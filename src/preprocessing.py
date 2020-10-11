@@ -1,11 +1,14 @@
 
 import os
+import re
 import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
 FIGURE_DIR = '../figures'
+RE_RANGE = re.compile(r'([0-9]+) ?- ?([0-9]+)')
+RE_MONTH = re.compile(r'([0-9]+) month')
 
 
 def save_barh_figure(x, y, title, xlabel, ylabel, img_title):
@@ -49,8 +52,25 @@ def compute_missing_values(df):
     return missing_df
 
 
+def reduce_age_range(x):
+    if pd.notnull(x):
+        ranges = re.match(RE_RANGE, x)
+        months = re.match(RE_MONTH, x)
+        if ranges:
+            lower, upper = ranges.groups()
+            return (float(lower) + float(upper)) / 2  # ex case: 15 - 20
+        elif months:
+            return float(months.groups()[0]) / 12  # ex case: 13 months
+        elif x.endswith('+'):
+            return float(x[:2])  # ex case: 80+
+        elif x.endswith('-'):
+            return float(x[:2])  # ex case: 30 -
+        else:
+            return float(x)  # ex case: 30
+
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
+    individual_df['age'] = individual_df['age'].apply(reduce_age_range)
     location_df = pd.read_csv(location_file, parse_dates=['Last_Update'])
 
     print(individual_df.describe())
