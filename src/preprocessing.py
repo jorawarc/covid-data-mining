@@ -29,7 +29,7 @@ def visual_by_country(location_df):
     country_df = location_df[['Country_Region', 'Deaths', 'Confirmed', 'Recovered']].groupby('Country_Region').sum()
 
     deaths = country_df[country_df['Deaths'] > 1000].sort_values('Deaths')  # Graph gets messy without this restriction
-    confirmed = country_df[country_df['Confirmed'] > 50000].sort_values('Confirmed')
+    confirmed = country_df[country_df['Confirmed'] > 200000].sort_values('Confirmed')
     recovered = country_df[country_df['Recovered'] > 50000].sort_values('Recovered')
 
     save_barh_figure(deaths.index, deaths['Deaths'], 'Deaths by Country', 'Number of Deaths',
