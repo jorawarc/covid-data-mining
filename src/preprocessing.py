@@ -6,10 +6,12 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 FIGURE_DIR = '../figures'
 RE_RANGE = re.compile(r'([0-9]+) ?- ?([0-9]+)')
 RE_MONTH = re.compile(r'([0-9]+) month')
+RE_DATE = re.compile(r'([0-9\.]+) ?- ?([0-9\.]+)')
 
 
 def save_barh_figure(x, y, title, xlabel, ylabel, img_title):
@@ -75,9 +77,25 @@ def reduce_age_range(x):
             return float(x)  # ex case: 30
 
 
+def reduce_date_confirmation(x):
+    if pd.notnull(x):
+        ranges = re.match(RE_DATE, x)
+        if ranges:
+            lower, upper = ranges.groups()
+            date_format = '%d.%m.%Y'
+            initial_date = datetime.strptime(lower, date_format)
+            final_date = datetime.strptime(upper, date_format)
+            mean = (final_date - initial_date) / 2
+            initial_date += mean
+            return initial_date.strftime(date_format)
+        return x
+
+
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
+    individual_df['date_confirmation'] = individual_df['date_confirmation'].apply(reduce_date_confirmation)
+    individual_df['date_confirmation'] = pd.to_datetime(individual_df['date_confirmation'])
     location_df = pd.read_csv(location_file, parse_dates=['Last_Update'])
 
     print(individual_df.describe())
