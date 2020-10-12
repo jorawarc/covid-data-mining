@@ -2,8 +2,9 @@
 import os
 import re
 import sys
-import pandas as pd
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 FIGURE_DIR = '../figures'
@@ -37,9 +38,15 @@ def visual_by_country(location_df):
                      'Number of Recoveries', 'Country',   os.path.join(FIGURE_DIR, 'recoveries_by_country.png'))
 
 
-def cases_by_age():
-    # TODO: deaths, confirmed cases, recovery by age group
-    pass
+def visual_by_outcome(individual_df):
+    sns.set_theme(style='whitegrid')
+    dropped = individual_df.dropna()
+    data = dropped.groupby(['outcome']).size().reset_index(name="count").sort_values('count', ascending=False)
+    sns.barplot(x='outcome', y='count', data=data, palette='rocket')
+    plt.title('Outcome Frequency')
+    plt.xlabel('Outcome')
+    plt.ylabel('Number of People')
+    plt.savefig(os.path.join(FIGURE_DIR, 'outcomes.png'), dpi=500, bbox_inches='tight')
 
 
 def compute_missing_values(df):
@@ -78,6 +85,7 @@ def main(individual_file, location_file):
 
     print(compute_missing_values(individual_df))
     print(compute_missing_values(location_df))
+    visual_by_outcome(individual_df)
     visual_by_country(location_df)
 
 
