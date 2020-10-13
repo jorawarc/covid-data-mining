@@ -91,6 +91,69 @@ def reduce_date_confirmation(x):
         return x
 
 
+def detect_outliers(individual_df, location_df):
+    lats_df = individual_df['latitude']
+    # Get quartiles
+    lats_quartiles = np.nanpercentile(lats_df, [25, 75])
+    lats_first_quartile = lats_quartiles[0]
+    lats_third_quartile = lats_quartiles[1]
+    # Calc inter quartile range
+    lats_inter_quartile_range = lats_third_quartile - lats_first_quartile
+    # Calc outlier bounds
+    lats_lower_bound = lats_first_quartile - lats_inter_quartile_range * 1.5
+    lats_upper_bound = lats_third_quartile + lats_inter_quartile_range * 1.5
+    # Filter df to get outliers
+    outlier_lats_df = lats_df[(lats_df > lats_upper_bound) | (lats_df < lats_lower_bound)]
+    # Get number of outliers
+    outlier_lats_count = outlier_lats_df.count()
+
+    print("outlier_lats_count = ", outlier_lats_count)
+
+
+    longs_df = individual_df['longitude']
+    # Get quartiles
+    longs_quartiles = np.nanpercentile(longs_df, [25, 75])
+    longs_first_quartile = longs_quartiles[0]
+    longs_third_quartile = longs_quartiles[1]
+    # Calc inter quartile range
+    longs_inter_quartile_range = longs_third_quartile - longs_first_quartile
+    # Calc outlier bounds
+    longs_lower_bound = longs_first_quartile - longs_inter_quartile_range * 1.5
+    longs_upper_bound = longs_third_quartile + longs_inter_quartile_range * 1.5
+    # Filter df to get outliers
+    outlier_longs_df = longs_df[(longs_df > longs_upper_bound) | (longs_df < longs_lower_bound)]
+    # Get number of outliers
+    outlier_longs_count = outlier_longs_df.count()
+
+    print("outlier_longs_count = ", outlier_longs_count)
+
+
+    date_time_df = pd.to_datetime(individual_df['date_confirmation'])
+    date_time_no_outliers_df = remove_outliers(date_time_df)
+    confirmed_no_outliers_df = remove_outliers(location_df['Confirmed'])
+    deaths_no_outliers_df = remove_outliers(location_df['Deaths'])
+    recovered_no_outliers_df = remove_outliers(location_df['Recovered'])
+    active_no_outliers_df = remove_outliers(location_df['Active'])
+    incidence_rate_no_outliers_df = remove_outliers(location_df['Incidence_Rate'])
+    case_fatality_ratio_no_outliers_df = remove_outliers(location_df['Case-Fatality_Ratio'])
+
+    print(date_time_no_outliers_df)
+    print(confirmed_no_outliers_df)
+    print(deaths_no_outliers_df)
+    print(recovered_no_outliers_df)
+    print(active_no_outliers_df)
+    print(incidence_rate_no_outliers_df)
+    print(case_fatality_ratio_no_outliers_df)
+
+def remove_outliers(df):
+    quantiles = df.quantile([.05, .95])
+    lower_bound = quantiles[.05]
+    upper_bound = quantiles[.95]
+    print(quantiles)
+    no_outliers_df = df[(df < upper_bound) | (df > lower_bound)]
+    return no_outliers_df
+
+
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
@@ -98,17 +161,26 @@ def main(individual_file, location_file):
     individual_df['date_confirmation'] = pd.to_datetime(individual_df['date_confirmation'])
     location_df = pd.read_csv(location_file, parse_dates=['Last_Update'])
 
-    print(individual_df.describe())
-    print(location_df.describe())
+    #print(individual_df.describe())
+    #print(location_df.describe())
 
-    print(compute_missing_values(individual_df))
-    print(compute_missing_values(location_df))
-    visual_by_outcome(individual_df)
-    visual_by_country(location_df)
+    #print(compute_missing_values(individual_df))
+    #print(compute_missing_values(location_df))
+    #visual_by_outcome(individual_df)
+    #visual_by_country(location_df)
 
+    # figure out compute func later
+    compute_missing_values(individual_df)
+    compute_missing_values(location_df)
+    outliers = detect_outliers(individual_df, location_df)
+
+def main1(individual_file, location_file):
+    individual_df = pd.read_csv(individual_file)
+    outliers = detect_outliers(individual_df)
 
 if __name__ == '__main__':
     assert len(sys.argv) == 3
     individual_file = sys.argv[1]
     location_file = sys.argv[2]
     main(individual_file, location_file)
+
