@@ -154,10 +154,21 @@ def main(individual_file, location_file):
     print_stats(individual_df, location_df)
     print_missing(individual_df, location_df)
 
+    # Handle Case where Location data: NaN, Country Individual data: province, country
+    # Instead find these miss matched cases and set the province value in the Individual data to 'unknown'
+    missing_provinces = location_df[pd.isna(location_df['Province_State'])]
+    missing_on_merge = missing_provinces.merge(individual_df, left_on='Country_Region', right_on='country', indicator=True)
+    missing_on_merge = missing_on_merge[(~pd.isna(missing_on_merge['province']) & (pd.isna(missing_on_merge['Province_State'])))]
+    countries = list(missing_on_merge['Country_Region'].unique())
+
+    removal_countries = location_df[location_df['Country_Region'].isin(countries)].groupby('Country_Region').size().to_frame('size').reset_index()
+    removal_countries = removal_countries[removal_countries['size'] == 1]
+
+    individual_df.loc[individual_df['country'].isin(removal_countries['Country_Region']), 'province'] = 'unknown'
+
     # Impute Age, Sex, Province for Individual DF / Province, Case Fatality for Location DF
     individual_df[['sex', 'province']] = individual_df[['sex', 'province']].fillna(value="unknown")
     individual_df['age'] = individual_df['age'].astype(np.float)
-    #individual_df['age'] = individual_df['age'].fillna(value=individual_df['age'].sum()/individual_df['age'].count())
     location_df['Province_State'] = location_df['Province_State'].fillna(value='unknown')
 
     # Drop missing Lat, Long columns
