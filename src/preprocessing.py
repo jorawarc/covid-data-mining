@@ -40,15 +40,20 @@ def visual_by_country(location_df):
                      'Number of Recoveries', 'Country',   os.path.join(FIGURE_DIR, 'recoveries_by_country.png'))
 
 
-def visual_by_outcome(individual_df):
-    sns.set_theme(style='whitegrid')
-    dropped = individual_df.dropna()
-    data = dropped.groupby(['outcome']).size().reset_index(name="count").sort_values('count', ascending=False)
-    sns.barplot(x='outcome', y='count', data=data, palette='rocket')
-    plt.title('Outcome Frequency')
-    plt.xlabel('Outcome')
-    plt.ylabel('Number of People')
-    plt.savefig(os.path.join(FIGURE_DIR, 'outcomes.png'), dpi=500, bbox_inches='tight')
+def visual_histograms(df, is_categorical=False):
+    if is_categorical:
+        for col in df.columns:
+            data = df.groupby([col]).size().reset_index(name="count").sort_values('count', ascending=False).head(20)
+            chart = sns.barplot(x=col, y='count', data=data, palette='rocket')
+            chart.set_xticklabels(chart.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=7)
+            plt.title('{} Frequency'.format(col[0].upper()+col[1:]))
+            plt.show()
+    else:
+        for col in df.columns:
+            plt.figure()
+            sns.histplot(df[col], color="skyblue")
+            plt.title('{} Frequency'.format(col[0].upper()+col[1:]))
+        plt.show()
 
 
 def compute_missing_values(df):
@@ -96,15 +101,50 @@ def main(individual_file, location_file):
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
     individual_df['date_confirmation'] = individual_df['date_confirmation'].apply(reduce_date_confirmation)
     individual_df['date_confirmation'] = pd.to_datetime(individual_df['date_confirmation'])
+
     location_df = pd.read_csv(location_file, parse_dates=['Last_Update'])
 
-    print(individual_df.describe())
-    print(location_df.describe())
+    print_stats(individual_df, location_df)
+    print_missing(individual_df, location_df)
 
+    # Impute Age, Sex, Province for Individual DF / Province, Case Fatality for Location DF
+    individual_df[['sex', 'province']] = individual_df[['sex', 'province']].fillna(value="unknown")
+    individual_df['age'] = individual_df['age'].astype(np.float)
+    #individual_df['age'] = individual_df['age'].fillna(value=individual_df['age'].sum()/individual_df['age'].count())
+    location_df['Province_State'] = location_df['Province_State'].fillna(value='unknown')
+
+    # Drop missing Lat, Long columns
+    location_df.dropna(subset=['Lat', 'Long_'], inplace=True)
+    individual_df.dropna(subset=['latitude', 'longitude'], inplace=True)
+
+    location_df['Case-Fatality_Ratio'] = location_df['Case-Fatality_Ratio'].fillna(value=0)
+    individual_df['country'] = individual_df['country'].fillna(value="Taiwan")
+    print("=== Changes After Imputation Process ===")
+    print_missing(individual_df, location_df)
+
+    # Generate Visuals
+    #visual_by_country(location_df)
+    #visual_histograms(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']], is_categorical=False)
+    #visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
+    #visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
+    #visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
+
+
+def print_missing(individual_df, location_df):
+    print("=== Missing Values ===")
+    print("Individual Cases DF:")
     print(compute_missing_values(individual_df))
+    print("Location DF:")
     print(compute_missing_values(location_df))
-    visual_by_outcome(individual_df)
-    visual_by_country(location_df)
+
+
+def print_stats(individual_df, location_df):
+    print("=== Stats ===")
+    print("Individual Cases DF:")
+    print(individual_df[['age']].describe())
+    print("Location DF:")
+    print(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active']].describe())
+    print(location_df[['Incidence_Rate','Case-Fatality_Ratio']].describe())
 
 
 if __name__ == '__main__':
