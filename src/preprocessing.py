@@ -115,16 +115,19 @@ def main(individual_file, location_file):
 
     # Drop missing Lat, Long columns
     location_df.dropna(subset=['Lat', 'Long_'], inplace=True)
+    individual_df.dropna(subset=['latitude', 'longitude'], inplace=True)
+
     location_df['Case-Fatality_Ratio'] = location_df['Case-Fatality_Ratio'].fillna(value=0)
+    individual_df['country'] = individual_df['country'].fillna(value="Taiwan")
     print("=== Changes After Imputation Process ===")
     print_missing(individual_df, location_df)
 
     # Generate Visuals
-    visual_by_country(location_df)
-    visual_histograms(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']], is_categorical=False)
-    visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
-    visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
-    visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
+    #visual_by_country(location_df)
+    #visual_histograms(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']], is_categorical=False)
+    #visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
+    #visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
+    #visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
 
 
 def print_missing(individual_df, location_df):
