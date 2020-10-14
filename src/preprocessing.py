@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy import stats
 from datetime import datetime
 
 FIGURE_DIR = '../figures'
@@ -96,6 +97,52 @@ def reduce_date_confirmation(x):
         return x
 
 
+def detect_outliers(individual_df, location_df):
+    #date_time_df = pd.to_datetime(individual_df['date_confirmation'])
+    #date_time_no_outliers_df = remove_outliers_zscore(date_time_df)
+    confirmed_no_outliers_df = remove_outliers_zscore(location_df['Confirmed'])
+    deaths_no_outliers_df = remove_outliers_zscore(location_df['Deaths'])
+    recovered_no_outliers_df = remove_outliers_zscore(location_df['Recovered'])
+    active_no_outliers_df = remove_outliers_zscore(location_df['Active'])
+    incidence_rate_no_outliers_df = remove_outliers_zscore(location_df['Incidence_Rate'])
+    case_fatality_ratio_no_outliers_df = remove_outliers_zscore(location_df['Case-Fatality_Ratio'])
+
+    # Print count of outliers
+    #print(date_time_no_outliers_df)
+    #print(confirmed_no_outliers_df)
+    #print(deaths_no_outliers_df)
+    #print(recovered_no_outliers_df)
+    #print(active_no_outliers_df)
+    #print(incidence_rate_no_outliers_df)
+
+    print()
+    print("case_fatality_ratio_no_outliers_df")
+    print(case_fatality_ratio_no_outliers_df)
+
+def remove_outliers_zscore(S):
+    S = S[~((S-S.mean()).abs() > 3*S.std())]
+    return S
+
+def remove_outliers_iqr(df):
+    quartiles = np.nanpercentile(df, [25, 75])
+    first_quartile = quartiles[0]
+    third_quartile = quartiles[1]
+    # Calc inter quartile range
+    inter_quartile_range = third_quartile - first_quartile
+    # Calc outlier bounds
+    lower_bound = first_quartile - inter_quartile_range * 1.5
+    upper_bound = third_quartile + inter_quartile_range * 1.5
+    # Filter df to get outliers
+    no_outliers_df = df[(df < upper_bound) & (df > lower_bound)]
+
+    return no_outliers_df
+
+def transform(df):
+    US_df = df[df['Country_Region'] == 'US']
+    country_state_df = US_df.groupby(['Province_State']).agg({'Confirmed': ['sum']})
+    # country_state_df = US_df.groupby(['Province_State']).sum().sort_values(by='sum', ascending=False).head(20)
+    print(country_state_df)
+
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
@@ -129,6 +176,8 @@ def main(individual_file, location_file):
     #visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
     #visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
 
+    outliers = detect_outliers(individual_df, location_df)
+    transformed_df = transform(location_df)
 
 def print_missing(individual_df, location_df):
     print("=== Missing Values ===")
