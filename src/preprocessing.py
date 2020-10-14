@@ -55,6 +55,7 @@ def visual_histograms(df, is_categorical=False):
             plt.title('{} Frequency'.format(col[0].upper()+col[1:]))
         plt.show()
 
+
 def compute_missing_values(df):
     missing = []
     for col in df.columns:
@@ -107,7 +108,9 @@ def main(individual_file, location_file):
     print_missing(individual_df, location_df)
 
     # Impute Age, Sex, Province for Individual DF / Province, Case Fatality for Location DF
-    individual_df[['age', 'sex', 'province']] = individual_df[['age', 'sex', 'province']].fillna(value="unknown")
+    individual_df[['sex', 'province']] = individual_df[['sex', 'province']].fillna(value="unknown")
+    individual_df['age'] = individual_df['age'].astype(np.float)
+    #individual_df['age'] = individual_df['age'].fillna(value=individual_df['age'].sum()/individual_df['age'].count())
     location_df['Province_State'] = location_df['Province_State'].fillna(value='unknown')
 
     # Drop missing Lat, Long columns
@@ -135,9 +138,10 @@ def print_missing(individual_df, location_df):
 def print_stats(individual_df, location_df):
     print("=== Stats ===")
     print("Individual Cases DF:")
-    print(individual_df.describe())
+    print(individual_df[['age']].describe())
     print("Location DF:")
-    print(location_df.describe())
+    print(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active']].describe())
+    print(location_df[['Incidence_Rate','Case-Fatality_Ratio']].describe())
 
 
 if __name__ == '__main__':
