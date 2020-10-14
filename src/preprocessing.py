@@ -115,7 +115,6 @@ def detect_outliers(individual_df, location_df):
     print(case_fatality_ratio_no_outliers_df)
 
 def remove_outliers_zscore(S):
-    print(type(S))
     S = S[~((S-S.mean()).abs() > 3*S.std())]
     return S
 
@@ -135,7 +134,8 @@ def remove_outliers_iqr(df):
 
 def transform(df):
     US_df = df[df['Country_Region'] == 'US']
-    country_state_df = US_df.groupby(['Province_State']).agg({'Confirmed': ['count']})
+    country_state_df = US_df.groupby(['Province_State']).agg({'Confirmed': ['sum']})
+    # country_state_df = US_df.groupby(['Province_State']).sum().sort_values(by='sum', ascending=False).head(20)
     print(country_state_df)
 
 def main(individual_file, location_file):
@@ -144,14 +144,14 @@ def main(individual_file, location_file):
     individual_df['date_confirmation'] = individual_df['date_confirmation'].apply(reduce_date_confirmation)
     individual_df['date_confirmation'] = pd.to_datetime(individual_df['date_confirmation'])
     location_df = pd.read_csv(location_file, parse_dates=['Last_Update'])
-
-    #print(individual_df.describe())
-    #print(location_df.describe())
-
-    #print(compute_missing_values(individual_df))
-    #print(compute_missing_values(location_df))
-    #visual_by_outcome(individual_df)
-    #visual_by_country(location_df)
+    #
+    # print(individual_df.describe())
+    # print(location_df.describe())
+    #
+    # print(compute_missing_values(individual_df))
+    # print(compute_missing_values(location_df))
+    # visual_by_outcome(individual_df)
+    # visual_by_country(location_df)
 
     # figure out compute func later
     compute_missing_values(individual_df)
