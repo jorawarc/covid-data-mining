@@ -9,6 +9,7 @@ from scipy import stats
 from datetime import datetime
 
 FIGURE_DIR = '../figures'
+DATA_DIR = '../data'
 RE_RANGE = re.compile(r'([0-9]+) ?- ?([0-9]+)')
 RE_MONTH = re.compile(r'([0-9]+) month')
 RE_DATE = re.compile(r'([0-9\.]+) ?- ?([0-9\.]+)')
@@ -96,24 +97,23 @@ def reduce_date_confirmation(x):
         return x
 
 
-
 def remove_outliers_individual_df(individual_df):
     age_outliers_df = get_outliers_zscore(individual_df, individual_df['age'])
     individual_df['epoch_date_confirmation'] = (individual_df['date_confirmation'] - pd.Timestamp(
         "1970-01-01")) // pd.Timedelta('1s')
 
     date_time_outliers_df = get_outliers_zscore(individual_df, individual_df['epoch_date_confirmation'])
-
-    outliers_count = []
-    outliers_count.append(["age", date_time_outliers_df.shape[0]])
-    outliers_count_df = pd.DataFrame(outliers_count, columns=['attribute', 'outliers_count'])
+    outliers_count_df = pd.DataFrame({"attribute": ['age', 'date_confirmation'],
+                                      "outliers_count": [age_outliers_df['age'].count(),
+                                                         date_time_outliers_df['epoch_date_confirmation'].count()]})
     print("Individual Cases DF:")
     print(outliers_count_df)
 
-    individual_df = age_outliers_df.merge(age_outliers_df, indicator=True, how='left').loc[
+    individual_df = individual_df.merge(age_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
 
     return individual_df
+
 
 def print_outliers_count_location_df(location_df):
     # get all outliers in their own df
@@ -134,7 +134,6 @@ def print_outliers_count_location_df(location_df):
 
     outliers_count_df = pd.DataFrame(outliers_count, columns=['attribute', 'outliers_count'])
 
-    print("=== Outliers ===")
     print("Location DF:")
     print(outliers_count_df)
 
@@ -166,10 +165,7 @@ def remove_outliers_location_df(location_df):
     location_df = location_df.merge(case_fatality_ratio_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
     # print(location_df)
-
-
     return location_df
-
 
 
 def get_outliers_zscore(df, s):
@@ -195,25 +191,27 @@ def remove_outliers_iqr(df):
 
     return no_outliers_df
 
-def transform(df):
+
+def aggregate_US_counties(df):
     US_df = df[df['Country_Region'] == 'US']
-    country_state_df = US_df.groupby(['Province_State']).agg({'Confirmed': ['sum']})
+    country_state_df = US_df[['Province_State', 'Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']].groupby('Province_State').sum()
+    country_state_df['Case-Fatality_Ratio'] = country_state_df['Deaths'] / country_state_df['Confirmed'] * 100
+    print("=== USA Aggregation ===")
+    print(country_state_df)
     return country_state_df
 
-def merge_on_country_province(individual_df, location_df):
-    merged_df = individual_df.merge(location_df,
-                                    indicator=True,
-                                    how='left',
-                                    left_on=['province', 'country'],
-                                    right_on=['Province_State', 'Country_Region'])
 
-    print(merged_df.columns)
-    print(merged_df['_merge'].value_counts())
-
+def join_data_sets(individual_df, location_df):
+    merged_df = individual_df.merge(right=location_df, left_on=['country', 'province'],
+                                    right_on=['Country_Region', 'Province_State'],
+                                    indicator=True, how='left')
+    merged_df = merged_df[merged_df['_merge'] == 'both']
+    merged_df = merged_df.drop(columns=['_merge'])
+    print('=== Merged Data ===')
     print(merged_df)
     return merged_df
 
-
+  
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
@@ -253,17 +251,28 @@ def main(individual_file, location_file):
     print_missing(individual_df, location_df)
 
     # Generate Visuals
-    # visual_by_country(location_df)
-    # visual_histograms(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']], is_categorical=False)
-    # visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
-    # visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
-    # visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
+    # generate_visuals(individual_df, location_df)
 
+    print("=== Outliers ===")
     individual_df = remove_outliers_individual_df(individual_df)
     print_outliers_count_location_df(location_df)
-    merge_on_country_province(individual_df, location_df)
-    return
-    transformed_df = transform(location_df)
+
+    country_state_df = aggregate_US_counties(location_df)
+    country_state_df.to_csv(os.path.join(DATA_DIR, 'USA_Aggregated_Data.csv'))
+
+    merged_df = join_data_sets(individual_df, location_df)
+    merged_df.to_csv(os.path.join(DATA_DIR, 'Merged_Data_Sets.csv'), index=False)
+
+
+def generate_visuals(individual_df, location_df):
+    visual_by_country(location_df)
+    visual_histograms(
+        location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']],
+        is_categorical=False)
+    visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
+    visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
+    visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
+
 
 def print_missing(individual_df, location_df):
     print("=== Missing Values ===")
