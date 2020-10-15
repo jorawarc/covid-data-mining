@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy import stats
 from datetime import datetime
 
 FIGURE_DIR = '../figures'
@@ -151,7 +150,6 @@ def remove_outliers_location_df(location_df):
 
     # join on set complement (or difference)
     print("before merge location_df ")
-    # print(location_df)
     location_df = location_df.merge(confirmed_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
     location_df = location_df.merge(deaths_outliers_df, indicator=True, how='left').loc[
@@ -164,7 +162,6 @@ def remove_outliers_location_df(location_df):
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
     location_df = location_df.merge(case_fatality_ratio_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
-    # print(location_df)
     return location_df
 
 
@@ -251,7 +248,7 @@ def main(individual_file, location_file):
     print_missing(individual_df, location_df)
 
     # Generate Visuals
-    # generate_visuals(individual_df, location_df)
+    generate_visuals(individual_df, location_df)
 
     print("=== Outliers ===")
     individual_df = remove_outliers_individual_df(individual_df)
