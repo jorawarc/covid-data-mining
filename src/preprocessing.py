@@ -10,6 +10,7 @@ from scipy import stats
 from datetime import datetime
 
 FIGURE_DIR = '../figures'
+DATA_DIR = '../data'
 RE_RANGE = re.compile(r'([0-9]+) ?- ?([0-9]+)')
 RE_MONTH = re.compile(r'([0-9]+) month')
 RE_DATE = re.compile(r'([0-9\.]+) ?- ?([0-9\.]+)')
@@ -115,13 +116,14 @@ def detect_outliers(individual_df, location_df):
     #print(active_no_outliers_df)
     #print(incidence_rate_no_outliers_df)
 
-    print()
     print("case_fatality_ratio_no_outliers_df")
     print(case_fatality_ratio_no_outliers_df)
+
 
 def remove_outliers_zscore(S):
     S = S[~((S-S.mean()).abs() > 3*S.std())]
     return S
+
 
 def remove_outliers_iqr(df):
     quartiles = np.nanpercentile(df, [25, 75])
@@ -137,11 +139,15 @@ def remove_outliers_iqr(df):
 
     return no_outliers_df
 
+
 def transform(df):
     US_df = df[df['Country_Region'] == 'US']
-    country_state_df = US_df.groupby(['Province_State']).agg({'Confirmed': ['sum']})
-    # country_state_df = US_df.groupby(['Province_State']).sum().sort_values(by='sum', ascending=False).head(20)
+    country_state_df = US_df[['Province_State', 'Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']].groupby('Province_State').sum()
+    country_state_df['Case-Fatality_Ratio'] = country_state_df['Deaths'] / country_state_df['Confirmed'] * 100
+    print("=== USA Aggregation ===")
     print(country_state_df)
+    country_state_df.to_csv(os.path.join(DATA_DIR, 'USA_Aggregated_Data.csv'))
+
 
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
@@ -187,8 +193,9 @@ def main(individual_file, location_file):
     #visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
     #visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
 
-    outliers = detect_outliers(individual_df, location_df)
+    #outliers = detect_outliers(individual_df, location_df)
     transformed_df = transform(location_df)
+
 
 def print_missing(individual_df, location_df):
     print("=== Missing Values ===")
