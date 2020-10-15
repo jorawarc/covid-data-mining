@@ -104,8 +104,11 @@ def remove_outliers_individual_df(individual_df):
 
     date_time_outliers_df = get_outliers_zscore(individual_df, individual_df['epoch_date_confirmation'])
 
-    print("Outliers in individual_df")
-    print("age = ", date_time_outliers_df.shape[0])
+    outliers_count = []
+    outliers_count.append(["age", date_time_outliers_df.shape[0]])
+    outliers_count_df = pd.DataFrame(outliers_count, columns=['attribute', 'outliers_count'])
+    print("Individual Cases DF:")
+    print(outliers_count_df)
 
     individual_df = age_outliers_df.merge(age_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
@@ -121,13 +124,20 @@ def print_outliers_count_location_df(location_df):
     incidence_rate_outliers_df = get_outliers_zscore(location_df, location_df['Incidence_Rate'])
     case_fatality_ratio_outliers_df = get_outliers_zscore(location_df, location_df['Case-Fatality_Ratio'])
 
-    print("Outliers in location_df")
-    print("confirmed = ", confirmed_outliers_df.shape[0])
-    print("deaths = ", deaths_outliers_df.shape[0])
-    print("recovered = ",recovered_outliers_df.shape[0])
-    print("active = ",active_outliers_df.shape[0])
-    print("incidence_rate = ",incidence_rate_outliers_df.shape[0])
-    print("case_fatality_ratio = ", case_fatality_ratio_outliers_df.shape[0])
+    outliers_count = []
+    outliers_count.append(["Confirmed", confirmed_outliers_df.shape[0]])
+    outliers_count.append(["Deaths", deaths_outliers_df.shape[0]])
+    outliers_count.append(["Recovered", recovered_outliers_df.shape[0]])
+    outliers_count.append(["Active", active_outliers_df.shape[0]])
+    outliers_count.append(["Incidence_rate", incidence_rate_outliers_df.shape[0]])
+    outliers_count.append(["Case_fatality_ratio", case_fatality_ratio_outliers_df.shape[0]])
+
+    outliers_count_df = pd.DataFrame(outliers_count, columns=['attribute', 'outliers_count'])
+
+    print("=== Outliers ===")
+    print("Location DF:")
+    print(outliers_count_df)
+
 
 def remove_outliers_location_df(location_df):
     # get all outliers in their own df
