@@ -97,35 +97,6 @@ def reduce_date_confirmation(x):
         return x
 
 
-
-def detect_outliers(individual_df, location_df):
-    # TODO: compute, report, and remove outliers for age in individual_df
-    #date_time_df = pd.to_datetime(individual_df['date_confirmation'])
-    #date_time_no_outliers_df = remove_outliers_zscore(date_time_df)
-    confirmed_no_outliers_df = remove_outliers_zscore(location_df['Confirmed'])
-    deaths_no_outliers_df = remove_outliers_zscore(location_df['Deaths'])
-    recovered_no_outliers_df = remove_outliers_zscore(location_df['Recovered'])
-    active_no_outliers_df = remove_outliers_zscore(location_df['Active'])
-    incidence_rate_no_outliers_df = remove_outliers_zscore(location_df['Incidence_Rate'])
-    case_fatality_ratio_no_outliers_df = remove_outliers_zscore(location_df['Case-Fatality_Ratio'])
-
-    # Print count of outliers
-    #print(date_time_no_outliers_df)
-    #print(confirmed_no_outliers_df)
-    #print(deaths_no_outliers_df)
-    #print(recovered_no_outliers_df)
-    #print(active_no_outliers_df)
-    #print(incidence_rate_no_outliers_df)
-
-    print("case_fatality_ratio_no_outliers_df")
-    print(case_fatality_ratio_no_outliers_df)
-
-
-def remove_outliers_zscore(S):
-    S = S[~((S-S.mean()).abs() > 3*S.std())]
-    return S
-
-
 def remove_outliers_individual_df(individual_df):
     age_outliers_df = get_outliers_zscore(individual_df, individual_df['age'])
     individual_df['epoch_date_confirmation'] = (individual_df['date_confirmation'] - pd.Timestamp(
