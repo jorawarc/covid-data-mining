@@ -95,27 +95,39 @@ def reduce_date_confirmation(x):
             return initial_date.strftime(date_format)
         return x
 
-# make functions that get numbers of outliers
+
+
 def remove_outliers_individual_df(individual_df):
-    # todo:
     age_outliers_df = get_outliers_zscore(individual_df, individual_df['age'])
-
-
     individual_df['epoch_date_confirmation'] = (individual_df['date_confirmation'] - pd.Timestamp(
         "1970-01-01")) // pd.Timedelta('1s')
 
     date_time_outliers_df = get_outliers_zscore(individual_df, individual_df['epoch_date_confirmation'])
 
-    # todo: fix how to print looks aka two cols attri and count
-    print(date_time_outliers_df)
-    # convert back to datetime
-    # individual_df = individual_df.merge(date_time_outliers_df, indicator=True, how='left').loc[
-    #     lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
+    print("Outliers in individual_df")
+    print("age = ", date_time_outliers_df.shape[0])
 
     individual_df = age_outliers_df.merge(age_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
 
     return individual_df
+
+def print_outliers_count_location_df(location_df):
+    # get all outliers in their own df
+    confirmed_outliers_df = get_outliers_zscore(location_df, location_df['Confirmed'])
+    deaths_outliers_df = get_outliers_zscore(location_df, location_df['Deaths'])
+    recovered_outliers_df = get_outliers_zscore(location_df, location_df['Recovered'])
+    active_outliers_df = get_outliers_zscore(location_df, location_df['Active'])
+    incidence_rate_outliers_df = get_outliers_zscore(location_df, location_df['Incidence_Rate'])
+    case_fatality_ratio_outliers_df = get_outliers_zscore(location_df, location_df['Case-Fatality_Ratio'])
+
+    print("Outliers in location_df")
+    print("confirmed = ", confirmed_outliers_df.shape[0])
+    print("deaths = ", deaths_outliers_df.shape[0])
+    print("recovered = ",recovered_outliers_df.shape[0])
+    print("active = ",active_outliers_df.shape[0])
+    print("incidence_rate = ",incidence_rate_outliers_df.shape[0])
+    print("case_fatality_ratio = ", case_fatality_ratio_outliers_df.shape[0])
 
 def remove_outliers_location_df(location_df):
     # get all outliers in their own df
@@ -131,31 +143,20 @@ def remove_outliers_location_df(location_df):
     # join on set complement (or difference)
     print("before merge location_df ")
     # print(location_df)
-    # location_df = location_df.merge(confirmed_outliers_df, indicator=True, how='left').loc[
-    #     lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
-    # location_df = location_df.merge(deaths_outliers_df, indicator=True, how='left').loc[
-    #     lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
-    # location_df = location_df.merge(recovered_outliers_df, indicator=True, how='left').loc[
-    #     lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
-    # location_df = location_df.merge(active_outliers_df, indicator=True, how='left').loc[
-    #     lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
+    location_df = location_df.merge(confirmed_outliers_df, indicator=True, how='left').loc[
+        lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
+    location_df = location_df.merge(deaths_outliers_df, indicator=True, how='left').loc[
+        lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
+    location_df = location_df.merge(recovered_outliers_df, indicator=True, how='left').loc[
+        lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
+    location_df = location_df.merge(active_outliers_df, indicator=True, how='left').loc[
+        lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
     location_df = location_df.merge(incidence_rate_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
     location_df = location_df.merge(case_fatality_ratio_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
     # print(location_df)
 
-    # todo: Print count of outliers
-    # print(date_time_no_outliers_df)
-    # print(confirmed_no_outliers_df)
-    # print(deaths_no_outliers_df)
-    # print(recovered_no_outliers_df)
-    # print(active_no_outliers_df)
-    # print(incidence_rate_no_outliers_df)
-
-    # print()
-    # print("case_fatality_ratio_no_outliers_df")
-    # print(case_fatality_ratio_no_outliers_df)
 
     return location_df
 
@@ -248,11 +249,8 @@ def main(individual_file, location_file):
     # visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
     # visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
 
-    # individual_df = remove_outliers_individual_df(individual_df)
-    # print('print counts')
-    # print(individual_df.count())
-    location_df = remove_outliers_location_df(location_df)
-    # print(location_df.count())
+    individual_df = remove_outliers_individual_df(individual_df)
+    print_outliers_count_location_df(location_df)
     merge_on_country_province(individual_df, location_df)
     return
     transformed_df = transform(location_df)
