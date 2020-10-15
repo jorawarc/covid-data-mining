@@ -103,14 +103,13 @@ def remove_outliers_individual_df(individual_df):
         "1970-01-01")) // pd.Timedelta('1s')
 
     date_time_outliers_df = get_outliers_zscore(individual_df, individual_df['epoch_date_confirmation'])
-
-    outliers_count = []
-    outliers_count.append(["age", date_time_outliers_df.shape[0]])
-    outliers_count_df = pd.DataFrame(outliers_count, columns=['attribute', 'outliers_count'])
+    outliers_count_df = pd.DataFrame({"attribute": ['age', 'date_confirmation'],
+                                      "outliers_count": [age_outliers_df['age'].count(),
+                                                         date_time_outliers_df['epoch_date_confirmation'].count()]})
     print("Individual Cases DF:")
     print(outliers_count_df)
 
-    individual_df = age_outliers_df.merge(age_outliers_df, indicator=True, how='left').loc[
+    individual_df = individual_df.merge(age_outliers_df, indicator=True, how='left').loc[
         lambda x: x['_merge'] != 'both'].drop('_merge', axis=1)
 
     return individual_df
@@ -135,7 +134,6 @@ def print_outliers_count_location_df(location_df):
 
     outliers_count_df = pd.DataFrame(outliers_count, columns=['attribute', 'outliers_count'])
 
-    print("=== Outliers ===")
     print("Location DF:")
     print(outliers_count_df)
 
@@ -254,10 +252,10 @@ def main(individual_file, location_file):
 
     # Generate Visuals
     # generate_visuals(individual_df, location_df)
-    
+
+    print("=== Outliers ===")
     individual_df = remove_outliers_individual_df(individual_df)
     print_outliers_count_location_df(location_df)
-    join_data_sets(individual_df, location_df)
 
     country_state_df = aggregate_US_counties(location_df)
     country_state_df.to_csv(os.path.join(DATA_DIR, 'USA_Aggregated_Data.csv'))
