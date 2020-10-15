@@ -99,6 +99,7 @@ def reduce_date_confirmation(x):
 
 
 def detect_outliers(individual_df, location_df):
+    # TODO: compute, report, and remove outliers for age in individual_df
     #date_time_df = pd.to_datetime(individual_df['date_confirmation'])
     #date_time_no_outliers_df = remove_outliers_zscore(date_time_df)
     confirmed_no_outliers_df = remove_outliers_zscore(location_df['Confirmed'])
@@ -149,6 +150,17 @@ def transform(df):
     country_state_df.to_csv(os.path.join(DATA_DIR, 'USA_Aggregated_Data.csv'))
 
 
+def join_data_sets(individual_df, location_df):
+    merged_df = individual_df.merge(right=location_df, left_on=['country', 'province'],
+                                    right_on=['Country_Region', 'Province_State'],
+                                    indicator=True, how='left')
+    merged_df = merged_df[merged_df['_merge'] == 'both']
+    merged_df = merged_df.drop(columns=['_merge'])
+    print('=== Merged Data ===')
+    print(merged_df)
+    merged_df.to_csv(os.path.join(DATA_DIR, 'Merged_Data_Sets.csv'), index=False)
+
+
 def main(individual_file, location_file):
     individual_df = pd.read_csv(individual_file)
     individual_df['age'] = individual_df['age'].apply(reduce_age_range)
@@ -187,14 +199,22 @@ def main(individual_file, location_file):
     print_missing(individual_df, location_df)
 
     # Generate Visuals
-    #visual_by_country(location_df)
-    #visual_histograms(location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']], is_categorical=False)
-    #visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
-    #visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
-    #visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
+    # generate_visuals(individual_df, location_df)
 
     #outliers = detect_outliers(individual_df, location_df)
     transformed_df = transform(location_df)
+
+    join_data_sets(individual_df, location_df)
+
+
+def generate_visuals(individual_df, location_df):
+    visual_by_country(location_df)
+    visual_histograms(
+        location_df[['Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']],
+        is_categorical=False)
+    visual_histograms(location_df[['Province_State', 'Country_Region']], is_categorical=True)
+    visual_histograms(individual_df[['sex', 'outcome']], is_categorical=True)
+    visual_histograms(individual_df[['age']][individual_df['age'] != 'unknown'].astype(np.float), is_categorical=False)
 
 
 def print_missing(individual_df, location_df):
