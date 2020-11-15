@@ -31,27 +31,6 @@ DROP_FEATURES = ['Last_Update', 'additional_information', 'source', 'Combined_Ke
 SCALED_FEATURES = ['age', 'Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']
 
 
-def load_model(name, generate_model):
-    try:
-        with open(name+'.pkl', 'rb') as fd:
-            model = joblib.load(fd)
-            return model
-    except Exception as e:
-        print("'{}' could not be found".format(name))
-        return generate_model()
-
-
-def store_model(name, model):
-    try:
-        with open(name+'.pkl', 'wb') as fd:
-            joblib.dump(model, fd)
-            return True
-    except Exception as e:
-        print(e)
-        print("Unable to store model '{}'".format(name))
-        return False
-
-
 def apply_scheme(df):
     for k, v in SCHEMA.items():
         df[k] = df[k].astype(v)
