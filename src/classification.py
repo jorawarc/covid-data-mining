@@ -1,13 +1,15 @@
 
 import sys
-import joblib
+import pickle
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
+from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.metrics import classification_report
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
@@ -52,15 +54,28 @@ def train_and_fit_models(X_test, X_train, y_test, y_train, model_meta):
         print("\nTraining {} ...".format(name))
         model = generator()
         model.fit(X_train, y_train)
+        print("Storing model {} ...".format(name))
+        pickle.dump(model, open(name+'.pkl', 'wb'))
         print("Scores for {} ...".format(name))
         print("- Training accuracy: {}".format(model.score(X_train, y_train)))
-        print("- Test accuracy: {}".format(model.score(X_test, y_test)))
-        print("Storing model {}\n".format(name))
-        joblib.dump(model, name+'.pkl')
+        print("- Test accuracy: {}\n".format(model.score(X_test, y_test)))
+
+
+def load_and_fit_models(X_test, X_train, y_train, y_test, model_meta):
+    for name, _ in model_meta:
+        print("Loading {} ...".format(name))
+        model = pickle.load(open(name + '.pkl', 'rb'))
+        print("Scores for {} ...".format(name))
+        print("- Training accuracy: {}".format(model.score(X_train, y_train)))
+        print("- Test accuracy: {}\n".format(model.score(X_test, y_test)))
+
+        y_predict = model.predict(X_test)
+        print(confusion_matrix(y_test, y_predict))
+        print(classification_report(y_test, y_predict))
 
 
 def main(data_file, load_existing_models=False):
-    df = pd.read_csv(data_file).sample(2000)  # TODO: Remove in order to train on entire dataset
+    df = pd.read_csv(data_file)
     df = apply_scheme(df)
 
     encoded_df = pd.get_dummies(df, columns=CATEGORICAL_FEATURES)
@@ -73,11 +88,17 @@ def main(data_file, load_existing_models=False):
     scaler = MinMaxScaler()
     df[SCALED_FEATURES] = scaler.fit_transform(df[SCALED_FEATURES], df[CLASS_LABEL])
 
-    X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL], test_size=0.2, random_state=12)
+    X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL], test_size=0.2)
 
     model_meta = list(zip([KN_MODEL, ADA_MODEL], [generate_KN_model, generate_boosted_tree]))
-    train_and_fit_models(X_test, X_train, y_test, y_train, model_meta)
+    if load_existing_models:
+        load_and_fit_models(X_test, X_train, y_train, y_test, model_meta)
+    else:
+        train_and_fit_models(X_test, X_train, y_test, y_train, model_meta)
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    load_models = False
+    if sys.argv[-1] == '--load-existing-models':
+        load_models = True
+    main(sys.argv[1], load_existing_models=load_models)
