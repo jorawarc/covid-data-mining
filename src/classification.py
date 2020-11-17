@@ -74,6 +74,24 @@ def load_and_fit_models(X_test, X_train, y_train, y_test, model_meta):
         print(classification_report(y_test, y_predict))
 
 
+def impute_by_mean(df):
+    dfs = dict(tuple(df.groupby('outcome')))
+    recovered = dfs['recovered']
+    deceased = dfs['deceased']
+    nonhospitalized = dfs['nonhospitalized']
+    hospitalized = dfs['hospitalized']
+
+    imputer = SimpleImputer(strategy='mean')
+    recovered['age'] = imputer.fit_transform(recovered[['age']])
+    deceased['age'] = imputer.fit_transform(deceased[['age']])
+    hospitalized['age'] = imputer.fit_transform(hospitalized[['age']])
+    nonhospitalized['age'] = imputer.fit_transform(nonhospitalized[['age']])
+
+    df_list = [recovered, deceased, hospitalized, nonhospitalized]
+    concat_df = pd.concat(df_list)
+    return concat_df
+
+
 def main(data_file, load_existing_models=False):
     df = pd.read_csv(data_file)
     df = apply_scheme(df)
@@ -82,8 +100,7 @@ def main(data_file, load_existing_models=False):
     features = list(encoded_df.columns)
     features.remove(CLASS_LABEL)
 
-    imputer = SimpleImputer(strategy='mean')  # TODO: change this to be more meaningful imputation method
-    encoded_df['age'] = imputer.fit_transform(encoded_df[['age']])
+    encoded_df = impute_by_mean(encoded_df)
 
     scaler = MinMaxScaler()
     df[SCALED_FEATURES] = scaler.fit_transform(df[SCALED_FEATURES], df[CLASS_LABEL])
