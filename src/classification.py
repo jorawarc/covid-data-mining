@@ -3,18 +3,21 @@ import sys
 import pickle
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from multiprocessing import Process
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.metrics import plot_confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
 KN_MODEL = "kn_classifier"
 ADA_MODEL = "adaboost_classifier"
+TITLE = {KN_MODEL: "K-Nearest Neighbor Classifier", ADA_MODEL: "AdaBoost Decision Tree Classifier"}
 
 CLASS_LABEL = 'outcome'
 
@@ -51,14 +54,16 @@ def generate_boosted_tree():
 
 def train_and_fit_models(X_test, X_train, y_test, y_train, model_meta):
     for name, generator in model_meta:
-        print("\nTraining {} ...".format(name))
-        model = generator()
-        model.fit(X_train, y_train)
-        print("Storing model {} ...".format(name))
-        pickle.dump(model, open(name+'.pkl', 'wb'))
-        print("Scores for {} ...".format(name))
-        print("- Training accuracy: {}".format(model.score(X_train, y_train)))
-        print("- Test accuracy: {}\n".format(model.score(X_test, y_test)))
+        p = Process(target=_train_model_worker, args=(X_test, X_train, generator, name, y_test, y_train))
+        p.start()
+
+
+def _train_model_worker(X_test, X_train, generator, name, y_test, y_train):
+    print("Training {} ...".format(name))
+    model = generator()
+    model.fit(X_train, y_train)
+    print("Storing model {} ...".format(name))
+    pickle.dump(model, open(name + '.pkl', 'wb'))
 
 
 def load_and_fit_models(X_test, X_train, y_train, y_test, model_meta):
@@ -69,8 +74,11 @@ def load_and_fit_models(X_test, X_train, y_train, y_test, model_meta):
         print("- Training accuracy: {}".format(model.score(X_train, y_train)))
         print("- Test accuracy: {}\n".format(model.score(X_test, y_test)))
 
+        print("Generating Confusion Matrix ...")
         y_predict = model.predict(X_test)
-        print(confusion_matrix(y_test, y_predict))
+        plot_confusion_matrix(model, X_test, y_test)
+        plt.title("{} Confusion Matrix".format(TITLE[name]))
+        plt.show()
         print(classification_report(y_test, y_predict))
 
 
