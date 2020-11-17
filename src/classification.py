@@ -1,12 +1,10 @@
 
 import sys
 import pickle
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from multiprocessing import Process
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
