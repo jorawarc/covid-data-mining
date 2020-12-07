@@ -1,6 +1,7 @@
 
 import sys
 import pickle
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from multiprocessing import Process
@@ -8,19 +9,14 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
-
 RANDOM_SEED = 31415  # first 5 digits of pi
-KN_MODEL = "kn_classifier"
-ADA_MODEL = "adaboost_classifier"
-TITLE = {KN_MODEL: "K-Nearest Neighbor Classifier", ADA_MODEL: "AdaBoost Decision Tree Classifier"}
-
 CLASS_LABEL = 'outcome'
-
 
 SCHEMA = {'age': 'float64', 'sex': 'category', 'province': 'category',
           'country': 'category', 'latitude': 'float64', 'longitude': 'float64',
@@ -36,6 +32,17 @@ DROP_FEATURES = ['Last_Update', 'additional_information', 'source', 'Combined_Ke
 SCALED_FEATURES = ['age', 'Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']
 
 
+KNN_GRID = {'leaf_size': np.unique(np.geomspace(1, 60, num=5).astype(int)),
+            'n_neighbors': np.unique(np.geomspace(1, 30, num=5).astype(int)),
+            'p': [1, 2, 3, 4]
+            }
+
+ADA_GRID = {'max_depth': np.unique(np.geomspace(5, 30, num=5)),
+            'n_estimators': np.unique(np.geomspace(100, 300, num=10)),
+            'min_samples_leaf': np.unique(np.geomspace(1, 10, num=5))
+            }
+
+
 def apply_scheme(df):
     for k, v in SCHEMA.items():
         df[k] = df[k].astype(v)
@@ -44,12 +51,8 @@ def apply_scheme(df):
     return df.drop(columns=DROP_FEATURES)
 
 
-def generate_KN_model():
-    return KNeighborsClassifier()
-
-
-def generate_boosted_tree():
-    return AdaBoostClassifier(DecisionTreeClassifier(max_depth=5), n_estimators=200)
+def AdaBoostedTree(max_depth=5, n_estimators=200, min_samples_leaf=1):
+    return AdaBoostClassifier(DecisionTreeClassifier(max_depth=max_depth, min_samples_leaf=min_samples_leaf), n_estimators=n_estimators)
 
 
 def impute_by_mean(df):
@@ -85,6 +88,11 @@ def main(data_file):
 
     X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL],
                                                         test_size=0.25, random_state=RANDOM_SEED)
+
+    knn = KNeighborsClassifier()
+    clf = GridSearchCV(knn, KNN_GRID)
+    model = clf.fit(X_train, y_train)
+    print(model.best_params_)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,9 @@ ID | Name | Purpose | Additional Info
  N/A |`main.py` | not used currently | N/A
 
 ## Tuning Hyperparameters
-Both `KNN` and `ADA` models were tuned using a grid search approach. The following hyperparameters were turned to maximize performance: `Max-depth, N-estimators, Min-samples leaf`
+Both `KNN` and `ADA` models were tuned using a grid search approach. 
+`KNN` hyperparameters considered: `Leaf size, N-neighbors, k-norm`
+`ADA` hyperparameters considered: `Max-depth, N-estimators, Min-samples leaf`
 
  
  
