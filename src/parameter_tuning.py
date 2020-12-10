@@ -1,29 +1,29 @@
 
+import os
 import sys
 import time
-import pickle
-import pprint
 import warnings
 import itertools
 import numpy as np
 import pandas as pd
 from datetime import timedelta
+from sklearn.metrics import make_scorer
+from sklearn.metrics import recall_score, accuracy_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import cross_validate
-from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.metrics import precision_recall_fscore_support as score
 
 
 warnings.filterwarnings('ignore')  # sklearn: Precision and F-score are ill-defined and being set to 0.0 warning
 
 RANDOM_SEED = 31415  # first 5 digits of pi
 CLASS_LABEL = 'outcome'
+LOG_DIR = './log'
 
 SCHEMA = {'age': 'float64', 'sex': 'category', 'province': 'category',
           'country': 'category', 'latitude': 'float64', 'longitude': 'float64',
@@ -39,13 +39,12 @@ DROP_FEATURES = ['Last_Update', 'additional_information', 'source', 'Combined_Ke
 SCALED_FEATURES = ['age', 'Confirmed', 'Deaths', 'Recovered', 'Active', 'Incidence_Rate', 'Case-Fatality_Ratio']
 
 
-KNN_GRID = {'leaf_size': np.unique(np.geomspace(1, 60, num=5).astype(int)),
-            'n_neighbors': np.unique(np.geomspace(1, 30, num=5).astype(int))
+KNN_GRID = {'leaf_size': np.unique(np.geomspace(5, 50, num=3).astype(int)),
+            'n_neighbors': np.unique(np.linspace(5, 9, num=3).astype(int))
             }
 
-ADA_GRID = {'max_depth': np.unique(np.geomspace(5, 30, num=5)),
-            'n_estimators': np.unique(np.geomspace(100, 300, num=10)),
-            'min_samples_leaf': np.unique(np.geomspace(1, 10, num=5))
+ADA_GRID = {'n_estimators': np.unique(np.geomspace(25, 300, num=5)).astype(int),
+            'learning_rate': np.unique(np.linspace(0.5, 2, num=3))
             }
 
 
@@ -69,37 +68,38 @@ def apply_scheme(df):
 
 
 @timeit
-def grid_search(X_test, X_train, y_test, y_train, model, grid, verbose=False):
+def grid_search(X_test, X_train, y_test, y_train, model, grid, verbose=False, is_boosted=False):
     first_param, second_param = grid.values()
     first_key, second_key = grid.keys()
     combinations = itertools.product(first_param, second_param)
+    scoring = {'accuracy': make_scorer(accuracy_score),
+               'weighted_recall': make_scorer(recall_score, average='weighted'),
+               'recall': make_scorer(recall_score, average='macro'),
+               'deceased_recall': make_scorer(recall_score, average=None, labels=['deceased'])}
+
     manifest = {first_key: [], second_key: [], 'cross validation score': [], 'macro recall': [], 'deceased recall': [], 'micro recall': []}
     for i, j in combinations:
         print(f" -Trying: {first_key}={i}, {second_key}={j}")
-        m = model(**{first_key: i, second_key: j}).fit(X_train, y_train)
-        scores = cross_validate(m, X_train, y_train, cv=3)
-
-        y_predict = m.predict(X_test)
-        train_report = classification_report(y_train, m.predict(X_train), output_dict=True)
-        test_report = classification_report(y_test, y_predict, output_dict=True)
+        if is_boosted:
+            m = model(DecisionTreeClassifier(), **{first_key: i, second_key: j})
+        else:
+            m = model(**{first_key: i, second_key: j})
+        scores = cross_validate(m, X_train, y_train, cv=3, scoring=scoring)
 
         if verbose:
-            print(f'  --Cross validated mean accuracy: {scores["test_score"].mean()}')
+            print(f'  --Cross validated mean accuracy: {scores["test_accuracy"].mean()}')
 
-            print(f"  --Training 'deceased' recall={train_report['deceased']['recall']} |"
-                  f" macro recall {train_report['macro avg']['recall']} |"
-                  f" micro recall {train_report['weighted avg']['recall']}")
-
-            print(f"  --Test 'deceased' recall={test_report['deceased']['recall']} |"
-                  f" macro recall {test_report['macro avg']['recall']} |"
-                  f" micro recall {test_report['weighted avg']['recall']}")
+            print(f"  --Training 'deceased' recall={scores['test_deceased_recall'].mean()} |"
+                  f" macro recall {scores['test_recall'].mean()} |"
+                  f" micro recall {scores['test_weighted_recall'].mean()}")
 
         manifest[first_key].append(i)
         manifest[second_key].append(j)
-        manifest['cross validation score'].append(scores["test_score"].mean())
-        manifest['macro recall'].append(train_report['macro avg']['recall'])
-        manifest['deceased recall'].append(train_report['deceased']['recall'])
-        manifest['micro recall'].append(train_report['weighted avg']['recall'])
+        manifest['cross validation score'].append(scores["test_accuracy"].mean())
+        manifest['macro recall'].append(scores['test_recall'].mean())
+        manifest['deceased recall'].append(scores['test_deceased_recall'].mean())
+        manifest['micro recall'].append(scores['test_weighted_recall'].mean())
+        del m
     return manifest
 
 
@@ -110,15 +110,19 @@ def _get_best_score(manifest, metric):
 
 def get_best_params(manifest):
     metrics = ['cross validation score', 'macro recall', 'deceased recall', 'micro recall']
+    keys = manifest.keys()
     scores = [_get_best_score(manifest, i) for i in metrics]
 
+    print(' | '.join(keys))
     for i, score in zip(metrics, scores):
         print('Best {}: {}'.format(i, score))
 
-
-def AdaBoostedTree(max_depth=5, n_estimators=200, min_samples_leaf=1):
-    return AdaBoostClassifier(DecisionTreeClassifier(max_depth=max_depth, min_samples_leaf=min_samples_leaf), n_estimators=n_estimators)
-
+@timeit
+def grid_search_adaboost(X_test, X_train, y_test, y_train, grid):
+    ada = AdaBoostClassifier(DecisionTreeClassifier())
+    clf = GridSearchCV(ada, grid, cv=2, verbose=100000, n_jobs=2)
+    clf.fit(X_train, y_train)
+    return clf
 
 @timeit
 def impute_by_mean(df):
@@ -142,7 +146,7 @@ def impute_by_mean(df):
 def main(data_file):
     start = time.time()
     print("== Starting Execution ==")
-    df = pd.read_csv(data_file).sample(1000, random_state=RANDOM_SEED)  # TODO: remove
+    df = pd.read_csv(data_file)#.sample(1000, random_state=RANDOM_SEED)  # TODO: remove
 
     print("Encoding data ...")
     df = apply_scheme(df)
@@ -158,8 +162,11 @@ def main(data_file):
     X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL],
                                                         test_size=0.25, random_state=RANDOM_SEED)
 
-    print('Running KNN Grid Search ...')
-    manifest = grid_search(X_test, X_train, y_test, y_train, KNeighborsClassifier, KNN_GRID)
+    # print('Running KNN Grid Search ...')
+    # manifest = grid_search(X_test, X_train, y_test, y_train, KNeighborsClassifier, KNN_GRID, verbose=True)
+
+    print('Running ADA Grid Search ...')
+    manifest = grid_search(X_test, X_train, y_test, y_train, AdaBoostClassifier, ADA_GRID, verbose=True, is_boosted=True)
 
     print("== Total running time {} ==\n".format(str(timedelta(seconds=time.time()-start))))
 
@@ -169,5 +176,5 @@ def main(data_file):
 if __name__ == '__main__':
     manifest = main(sys.argv[1])
     results = pd.DataFrame(manifest)
-    results.to_csv(f"results_{time.time()}.csv")
+    results.to_csv(os.path.join(f"results_{time.time()}.csv"))
     get_best_params(manifest)
