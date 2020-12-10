@@ -13,6 +13,17 @@ ID | Name | Purpose | Additional Info
 2.1-2.4 | `classification.py` | generate models using `Merged_Data_Sets.csv` | Creates knn and adaboost classifiers
  N/A |`main.py` | not used currently | N/A
 
+## Tuning Hyperparameters
+Both `KNN` and `ADA` models were tuned using a grid search approach. 
+`KNN` hyperparameters considered: `Leaf size, N-neighbors, k-norm`
+`ADA` hyperparameters considered: `Max-depth, N-estimators, Min-samples leaf`
+
+ 
+ 
+## Downloading Models and Data
+The models and cleaned data set can be found here:
+https://drive.google.com/drive/folders/1d4h1lKy9umfL5JbVnwpvyMTyTmrO6i6Y?usp=sharing
+
 
 ## Requirements
 The project uses `Python 3.8` and the external libraries found in `requirements.txt`
