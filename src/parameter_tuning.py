@@ -43,7 +43,7 @@ KNN_GRID = {'leaf_size': np.unique(np.geomspace(5, 50, num=3).astype(int)),
             'n_neighbors': np.unique(np.linspace(5, 9, num=3).astype(int))
             }
 
-ADA_GRID = {'n_estimators': np.unique(np.geomspace(25, 300, num=5)).astype(int),
+ADA_GRID = {'base_estimator__max_depth': np.unique(np.geomspace(2, 40, num=5)).astype(int),
             'learning_rate': np.unique(np.linspace(0.5, 2, num=3))
             }
 
