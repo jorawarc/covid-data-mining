@@ -40,7 +40,7 @@ SCALED_FEATURES = ['age', 'Confirmed', 'Deaths', 'Recovered', 'Active', 'Inciden
 
 
 KNN_GRID = {'leaf_size': np.unique(np.geomspace(5, 50, num=3).astype(int)),
-            'n_neighbors': np.unique(np.linspace(5, 9, num=3).astype(int))
+            'n_neighbors': np.unique(np.linspace(5, 15, num=3).astype(int))
             }
 
 ADA_GRID = {'base_estimator__max_depth': np.unique(np.geomspace(2, 40, num=5)).astype(int),
@@ -162,8 +162,8 @@ def main(data_file):
     X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL],
                                                         test_size=0.25, random_state=RANDOM_SEED)
 
-    # print('Running KNN Grid Search ...')
-    # manifest = grid_search(X_test, X_train, y_test, y_train, KNeighborsClassifier, KNN_GRID, verbose=True)
+    print('Running KNN Grid Search ...')
+    manifest = grid_search(X_test, X_train, y_test, y_train, KNeighborsClassifier, KNN_GRID, verbose=True)
 
     print('Running ADA Grid Search ...')
     manifest = grid_search(X_test, X_train, y_test, y_train, AdaBoostClassifier, ADA_GRID, verbose=True, is_boosted=True)
