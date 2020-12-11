@@ -165,8 +165,8 @@ def main(data_file):
     print('Running KNN Grid Search ...')
     manifest = grid_search(X_test, X_train, y_test, y_train, KNeighborsClassifier, KNN_GRID, verbose=True)
 
-    print('Running ADA Grid Search ...')
-    manifest = grid_search(X_test, X_train, y_test, y_train, AdaBoostClassifier, ADA_GRID, verbose=True, is_boosted=True)
+    # print('Running ADA Grid Search ...')
+    # manifest = grid_search(X_test, X_train, y_test, y_train, AdaBoostClassifier, ADA_GRID, verbose=True, is_boosted=True)
 
     print("== Total running time {} ==\n".format(str(timedelta(seconds=time.time()-start))))
 

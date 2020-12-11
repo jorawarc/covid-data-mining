@@ -57,17 +57,18 @@ def load_and_fit_models(X_test, X_train, y_train, y_test, model_meta):
         print("- Training accuracy: {}".format(model.score(X_train, y_train)))
         print("- Test accuracy: {}\n".format(model.score(X_test, y_test)))
 
-        print("Generating Confusion Matrix ...")
         y_predict = model.predict(X_test)
         y_predict_train = model.predict(X_train)
-        plot_confusion_matrix(model, X_test, y_test)
-        plt.title("{} Confusion Matrix".format(TITLE[name]))
-        plt.show()
         print("Creating classification report")
         print("- Training report")
         print(classification_report(y_train, y_predict_train))
         print("- Testing report")
         print(classification_report(y_test, y_predict))
+
+        print("Generating Confusion Matrix ...")
+        plot_confusion_matrix(model, X_test, y_test)
+        plt.title("{} Confusion Matrix".format(TITLE[name]))
+        plt.show()
 
 
 def impute_by_mean(df):
