@@ -1,0 +1,58 @@
+== Starting Execution ==
+Encoding data ...
+ **Time: apply_scheme took 0:00:00.719140
+ **Time: impute_by_mean took 0:00:03.217438
+Running ADA Grid Search ...
+ -Trying: max_depth=2, learning_rate=0.5
+  --Cross validated mean accuracy: 0.9616455950230786
+  --Training 'deceased' recall=0.8310227274434593 | macro recall 0.9316744491039168 | micro recall 0.9616455950230786
+ -Trying: max_depth=2, learning_rate=1.25
+  --Cross validated mean accuracy: 0.9093504582246305
+  --Training 'deceased' recall=0.8525100550945561 | macro recall 0.8932700075516267 | micro recall 0.9093504582246305
+ -Trying: max_depth=2, learning_rate=2.0
+  --Cross validated mean accuracy: 0.7930162552679109
+  --Training 'deceased' recall=0.6389574252948167 | macro recall 0.6997913741068925 | micro recall 0.7930162552679109
+ -Trying: max_depth=4, learning_rate=0.5
+  --Cross validated mean accuracy: 0.9767529600642183
+  --Training 'deceased' recall=0.8885378683049296 | macro recall 0.9553050740380554 | micro recall 0.9767529600642183
+ -Trying: max_depth=4, learning_rate=1.25
+  --Cross validated mean accuracy: 0.965677971770687
+  --Training 'deceased' recall=0.8545203227846865 | macro recall 0.9366008588465177 | micro recall 0.965677971770687
+ -Trying: max_depth=4, learning_rate=2.0
+  --Cross validated mean accuracy: 0.9623519967890828
+  --Training 'deceased' recall=0.8176065193972804 | macro recall 0.9253599426813301 | micro recall 0.9623519967890828
+ -Trying: max_depth=8, learning_rate=0.5
+  --Cross validated mean accuracy: 0.9892594822396147
+  --Training 'deceased' recall=0.8352753901466835 | macro recall 0.9504340255424562 | micro recall 0.9892594822396147
+ -Trying: max_depth=8, learning_rate=1.25
+  --Cross validated mean accuracy: 0.9881811492407518
+  --Training 'deceased' recall=0.8314695537596363 | macro recall 0.9489351439152752 | micro recall 0.9881811492407518
+ -Trying: max_depth=8, learning_rate=2.0
+  --Cross validated mean accuracy: 0.985414408990568
+  --Training 'deceased' recall=0.8325894741902964 | macro recall 0.9471721385505018 | micro recall 0.985414408990568
+ -Trying: max_depth=18, learning_rate=0.5
+  --Cross validated mean accuracy: 0.9904448458090842
+  --Training 'deceased' recall=0.8294567319177323 | macro recall 0.9499206499843478 | micro recall 0.9904448458090842
+ -Trying: max_depth=18, learning_rate=1.25
+  --Cross validated mean accuracy: 0.9905438490868955
+  --Training 'deceased' recall=0.8305746991735066 | macro recall 0.9504013711478891 | micro recall 0.9905438490868955
+ -Trying: max_depth=18, learning_rate=2.0
+  --Cross validated mean accuracy: 0.9903458425312731
+  --Training 'deceased' recall=0.8299029572570212 | macro recall 0.9500107743214571 | micro recall 0.9903458425312731
+ -Trying: max_depth=40, learning_rate=0.5
+  --Cross validated mean accuracy: 0.9905090641514483
+  --Training 'deceased' recall=0.8337078921787366 | macro recall 0.9511407925202211 | micro recall 0.9905090641514483
+ -Trying: max_depth=40, learning_rate=1.25
+  --Cross validated mean accuracy: 0.9906375008361764
+  --Training 'deceased' recall=0.8316937181388347 | macro recall 0.9507147344544409 | micro recall 0.9906375008361764
+ -Trying: max_depth=40, learning_rate=2.0
+  --Cross validated mean accuracy: 0.9903806274667203
+  --Training 'deceased' recall=0.8321409951876776 | macro recall 0.9506095088133634 | micro recall 0.9903806274667203
+ **Time: grid_search took 5:03:51.490485
+== Total running time 5:04:06.927486 ==
+
+max_depth | learning_rate | cross validation score | macro recall | deceased recall | micro recall
+Best cross validation score: [40, 1.25, 0.9906375008361764, 0.9507147344544409, 0.8316937181388347, 0.9906375008361764]
+Best macro recall: [4, 0.5, 0.9767529600642183, 0.9553050740380554, 0.8885378683049296, 0.9767529600642183]
+Best deceased recall: [4, 0.5, 0.9767529600642183, 0.9553050740380554, 0.8885378683049296, 0.9767529600642183]
+Best micro recall: [40, 1.25, 0.9906375008361764, 0.9507147344544409, 0.8316937181388347, 0.9906375008361764]
