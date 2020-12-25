@@ -11,7 +11,6 @@ ID | Name | Purpose | Additional Info
 :---: | :---: | :---: | :---: 
 1.1-1.5 | `preprocessing.py` | clean, impute, and transform data set | generated `Merged_Data_Sets.csv` is too large for github. Must be run within src directory 
 2.1-2.4 | `classification.py` | generate models using `Merged_Data_Sets.csv` | Creates knn and adaboost classifiers
- N/A |`main.py` | not used currently | N/A
 
 ## Tuning Hyperparameters
 Both `KNN` and `ADA` models were tuned using a grid search approach. 
