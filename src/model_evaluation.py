@@ -102,9 +102,9 @@ def main(data_file, load_existing_models=False):
     scaler = MinMaxScaler()
     df[SCALED_FEATURES] = scaler.fit_transform(df[SCALED_FEATURES], df[CLASS_LABEL])
 
-    X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL], test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(encoded_df[features], encoded_df[CLASS_LABEL], test_size=0.25)
 
-    model_meta = list(zip([KN_MODEL, ADA_MODEL], [KNeighborsClassifier(), AdaBoostClassifier(DecisionTreeClassifier(max_depth=5), n_estimators=200)]))
+    model_meta = list(zip([ADA_MODEL], [AdaBoostClassifier(DecisionTreeClassifier(max_depth=4), learning_rate=0.5)]))
     load_and_fit_models(X_test, X_train, y_train, y_test, model_meta)
 
 
