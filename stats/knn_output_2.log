@@ -1,0 +1,40 @@
+== Starting Execution ==
+Encoding data ...
+ **Time: apply_scheme took 0:00:00.752553
+ **Time: impute_by_mean took 0:00:03.455924
+Running KNN Grid Search ...
+ -Trying: leaf_size=25, n_neighbors=5
+  --Cross validated mean accuracy: 0.9839748478159073
+  --Training 'deceased' recall=0.7256068739736442 | macro recall 0.920012257420336 | micro recall 0.9839748478159073
+ -Trying: leaf_size=25, n_neighbors=6
+  --Cross validated mean accuracy: 0.9831346578366446
+  --Training 'deceased' recall=0.720235342549314 | macro recall 0.9176500295362614 | micro recall 0.9831346578366446
+ -Trying: leaf_size=25, n_neighbors=9
+  --Cross validated mean accuracy: 0.9806542243628336
+  --Training 'deceased' recall=0.6515258051963467 | macro recall 0.8996228067006301 | micro recall 0.9806542243628336
+ -Trying: leaf_size=35, n_neighbors=5
+  --Cross validated mean accuracy: 0.9839694962873771
+  --Training 'deceased' recall=0.7256068739736442 | macro recall 0.9200071624202785 | micro recall 0.9839694962873771
+ -Trying: leaf_size=35, n_neighbors=6
+  --Cross validated mean accuracy: 0.9831373336009097
+  --Training 'deceased' recall=0.7202351923050919 | macro recall 0.9176482647207314 | micro recall 0.9831373336009097
+ -Trying: leaf_size=35, n_neighbors=9
+  --Cross validated mean accuracy: 0.9806729547126899
+  --Training 'deceased' recall=0.6521969461359439 | macro recall 0.8998042018905036 | micro recall 0.9806729547126899
+ -Trying: leaf_size=49, n_neighbors=5
+  --Cross validated mean accuracy: 0.9839694962873771
+  --Training 'deceased' recall=0.7256068739736442 | macro recall 0.9200071624202785 | micro recall 0.9839694962873771
+ -Trying: leaf_size=49, n_neighbors=6
+  --Cross validated mean accuracy: 0.9831373336009097
+  --Training 'deceased' recall=0.7202351923050919 | macro recall 0.9176482647207314 | micro recall 0.9831373336009097
+ -Trying: leaf_size=49, n_neighbors=9
+  --Cross validated mean accuracy: 0.9806729547126899
+  --Training 'deceased' recall=0.6521969461359439 | macro recall 0.8998042018905036 | micro recall 0.9806729547126899
+ **Time: grid_search took 2:38:43.096238
+== Total running time 2:38:59.854505 ==
+
+leaf_size | n_neighbors | cross validation score | macro recall | deceased recall | micro recall
+Best cross validation score: [25, 5, 0.9839748478159073, 0.920012257420336, 0.7256068739736442, 0.9839748478159073]
+Best macro recall: [25, 5, 0.9839748478159073, 0.920012257420336, 0.7256068739736442, 0.9839748478159073]
+Best deceased recall: [25, 5, 0.9839748478159073, 0.920012257420336, 0.7256068739736442, 0.9839748478159073]
+Best micro recall: [25, 5, 0.9839748478159073, 0.920012257420336, 0.7256068739736442, 0.9839748478159073]
